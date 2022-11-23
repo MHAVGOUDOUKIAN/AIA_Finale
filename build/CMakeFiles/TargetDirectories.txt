@@ -1,0 +1,3 @@
+/home/periodic/Bureau/AIA/build/CMakeFiles/App.dir
+/home/periodic/Bureau/AIA/build/CMakeFiles/edit_cache.dir
+/home/periodic/Bureau/AIA/build/CMakeFiles/rebuild_cache.dir
