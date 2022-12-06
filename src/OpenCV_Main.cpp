@@ -5,7 +5,68 @@ using namespace std;
 
 OpenCV_App::OpenCV_App() {
     capture = cv::VideoCapture(0);
+    tracker0 = cv::TrackerKCF::create();
+    tracker1 = cv::TrackerKCF::create();
+    tracker2 = cv::TrackerKCF::create();
+    tracker3 = cv::TrackerKCF::create();
+
+    index_carre_choosed=0;
+    end_init_phase = false;
 }
+
+// Update va renvoyer le cv::Mat avec toute les informations en utilisant
+// 'current-frame'
+cv::Mat& OpenCV_App::update() {
+    liste_carre.clear();
+    frame = getCap();
+    vierge = frame;
+
+    find_squares(frame, &liste_carre);
+
+    if(app_status == Status::INITIALIZATION) {
+        find_squares(frame, &liste_carre);
+        frame = debugSquares(liste_carre, frame, index_carre_choosed);
+        
+        if(end_init_phase){
+            if(findROI(frame, vierge, liste_carre[index_carre_choosed])) {
+                end_init_phase=false; 
+                tracker0->init(vierge, Rect(ROI0Coord, ROI0Size));
+                tracker1->init(vierge, Rect(ROI1Coord, ROI1Size));
+                tracker2->init(vierge, Rect(ROI2Coord, ROI2Size));
+                tracker3->init(vierge, Rect(ROI3Coord, ROI3Size));
+                app_status = Status::RUNNING;
+            }
+        }    
+        return frame;        
+    } else {
+        try {
+            cv::Rect rect0(0,0,0,0);
+            cv::Rect rect1(0,0,0,0);
+            cv::Rect rect2(0,0,0,0);
+            cv::Rect rect3(0,0,0,0);
+            if (tracker0->update(vierge, rect0) && tracker1->update(vierge, rect1) && tracker2->update(vierge, rect2) && tracker3->update(vierge, rect3)){
+                cv::Mat resBoundingBox0 = vierge(rect0);
+                cv::Mat resBoundingBox1 = vierge(rect1);
+                cv::Mat resBoundingBox2 = vierge(rect2);
+                cv::Mat resBoundingBox3 = vierge(rect3);
+                
+                line(vierge, cv::Point2i(rect0.x+rect0.width/2, rect0.y+rect0.height/2), cv::Point2i(rect0.x+rect0.width/2, rect0.y+rect0.height/2), cv::Scalar(255,0,255),5);
+                line(vierge, cv::Point2i(rect1.x+rect1.width/2, rect1.y+rect1.height/2), cv::Point2i(rect1.x+rect1.width/2, rect1.y+rect1.height/2), cv::Scalar(255,0,255),5);
+                line(vierge, cv::Point2i(rect2.x+rect2.width/2, rect2.y+rect2.height/2), cv::Point2i(rect2.x+rect2.width/2, rect2.y+rect2.height/2), cv::Scalar(255,0,255),5);
+                line(vierge, cv::Point2i(rect3.x+rect3.width/2, rect3.y+rect3.height/2), cv::Point2i(rect3.x+rect3.width/2, rect3.y+rect3.height/2), cv::Scalar(255,0,255),5);
+            }
+            else{
+                std::cout << "Lost tracking" << std::endl;
+            }
+        }
+        catch (exception& e)
+        {
+            std::cout << "Lost tracking" << std::endl;
+        }
+
+        return frame;
+    }
+}   
 
 OpenCV_App::~OpenCV_App() {}
 
@@ -94,17 +155,6 @@ cv::Mat OpenCV_App::debugSquares( std::vector<std::vector<cv::Point> > squares, 
         }
 
         carre_choosed = index_max_square;
-        // draw bounding rect
-        /*cv::Rect rect = boundingRect(cv::Mat(squares[i]));
-        cv::rectangle(image, rect.tl(), rect.br(), cv::Scalar(0,255,0), 2, 8, 0);
-
-        // draw rotated rect
-        cv::RotatedRect minRect = minAreaRect(cv::Mat(squares[i]));
-        cv::Point2f rect_points[4];
-        minRect.points( rect_points );
-        for ( int j = 0; j < 4; j++ ) {
-            cv::line( image, rect_points[j], rect_points[(j+1)%4], cv::Scalar(0,0,255), 1, 8 ); // blue
-        }*/
     }
 
     cv::drawContours(image, squares, index_max_square, cv::Scalar(0,0,255), 3, 8, std::vector<cv::Vec4i>(), 0, cv::Point());
@@ -170,19 +220,11 @@ bool OpenCV_App::findROI(cv::Mat& frame, cv::Mat& vierge, std::vector<cv::Point>
             ROI1 = vierge(Rect(ROI1Coord, ROI1Size));    
             ROI2 = vierge(Rect(ROI2Coord, ROI2Size));
             ROI3 = vierge(Rect(ROI3Coord, ROI3Size));
-
-            imshow("test", frame);
-            destroyAllWindows();
     }
     catch (exception& e) {
         std::cout << "Can't build ROI" << std::endl;
         return false;
     }
-
-    //cv::rectangle(frame, carre[0]-cv::Point(width*0.2/4, width*0.2/4), cv::Point(carre[0].x + width*0.2, carre[0].y + width*0.2)-cv::Point(width*0.2/4, width*0.2/4), cv::Scalar(255,0,255),3);
-    //cv::rectangle(frame, carre[1]-cv::Point(width*0.2*3/4, width*0.2/4), cv::Point(carre[1].x + width*0.2, carre[1].y + width*0.2)-cv::Point(width*0.2*3/4, width*0.2/4), cv::Scalar(255,0,255),3);
-    //cv::rectangle(frame, carre[2]-cv::Point(width*0.2*3/4, width*0.2*3/4), cv::Point(carre[2].x + width*0.2, carre[2].y + width*0.2)-cv::Point(width*0.2*3/4, width*0.2*3/4), cv::Scalar(255,0,255),3);
-    //cv::rectangle(frame, carre[3]-cv::Point(width*0.2/4, width*0.2*3/4), cv::Point(carre[3].x + width*0.2, carre[3].y + width*0.2)-cv::Point(width*0.2/4, width*0.2*3/4), cv::Scalar(255,0,255),3);
 
     std::cout << "salut" << std::endl;
 
@@ -195,6 +237,7 @@ void OpenCV_App::trackingSymbols(cv::Mat image, cv::Ptr<cv::Tracker>& tracker) {
     std::cout << rect.x << " - "<<  rect.y << std::endl;
 }
 
+//N'est utilisé que par la fonction update()
 cv::Mat& OpenCV_App::getCap(void) {
     capture.read(current_frame);
     return current_frame;
@@ -203,3 +246,4 @@ cv::Mat& OpenCV_App::getCap(void) {
 bool OpenCV_App::is_Capture_Open() {
     return capture.isOpened();
 }
+

@@ -1,0 +1,11 @@
+*.jpeg
+*.jpg
+Makefile
+build
+*.cmake
+CMakeCache.txt
+CMakeFiles
+.vscode
+main
+
+!build/CMakeLists.txt

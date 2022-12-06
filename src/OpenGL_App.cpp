@@ -94,7 +94,6 @@ void OpenGL_App::run() {
     GLuint textureCam;
     glGenTextures(1, &textureCam);
     
-
     // Tant que l'on ne ferme pas la fenetre ou que la capture video 
     // est tjs en cours on ne quitte pas
     while (!glfwWindowShouldClose(m_window) && opCV.is_Capture_Open())
@@ -106,16 +105,15 @@ void OpenGL_App::run() {
 
         m_shaderProgram->use();
 
-        // Obtenir le flux de la webcam et l'utiliser en tant que texture opengl
-        cv::Mat captureWebCam = opCV.getCap(); 
+        // la fonction opCV.update() permet d'obtenir deux choses:
+        // 1 - Visualiser les carrés détectés par la camera lors de la phase d'init.
+        // 2 - Les points de tracking lors de la phase de jeu
+        cv::Mat captureWebCam = opCV.update();
         cv::cvtColor(captureWebCam, captureWebCam, cv::COLOR_RGB2BGR);
         flip(captureWebCam, captureWebCam, -1);
         glBindTexture(GL_TEXTURE_2D, textureCam);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, captureWebCam.cols, captureWebCam.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, captureWebCam.ptr());
         glGenerateMipmap(GL_TEXTURE_2D);
-        
-
-        //cv::cvtColor(captureWebCam, captureWebCam, cv::COLOR_RGB2BGR);
 
         // render cam
         glBindVertexArray(VAO_cam);
@@ -140,6 +138,7 @@ void OpenGL_App::run() {
 
 void OpenGL_App::processInput() { 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(m_window, true);
+    if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) opCV.end_init_phase=true;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }

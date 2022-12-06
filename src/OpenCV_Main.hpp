@@ -12,6 +12,8 @@ class OpenCV_App {
         OpenCV_App();
         ~OpenCV_App();
 
+        cv::Mat& update();
+
         int angle( cv::Point a, cv::Point b, cv::Point c );
         void find_squares(cv::Mat& image, std::vector<std::vector<cv::Point> >* squares);
         cv::Mat debugSquares( std::vector<std::vector<cv::Point> > squares, cv::Mat image, int& carre_choosed);
@@ -21,7 +23,11 @@ class OpenCV_App {
         bool is_Capture_Open();
         cv::Mat& getCap(void);
 
+        bool end_init_phase;
+
     private:
+        enum Status{INITIALIZATION, RUNNING};
+
         cv::Point ROI0Coord;
         cv::Point ROI1Coord;
         cv::Point ROI2Coord;
@@ -31,13 +37,26 @@ class OpenCV_App {
         cv::Point ROI2Size;
         cv::Point ROI3Size;
 
+        cv::Ptr<cv::Tracker> tracker0;
+        cv::Ptr<cv::Tracker> tracker1;
+        cv::Ptr<cv::Tracker> tracker2;
+        cv::Ptr<cv::Tracker> tracker3;
+
         cv::Mat ROI0;
         cv::Mat ROI1;
         cv::Mat ROI2;
         cv::Mat ROI3;
 
+        std::vector<std::vector<cv::Point>> liste_carre;
+
         cv::VideoCapture capture;
         cv::Mat current_frame;
+
+        int index_carre_choosed;
+        int app_status;
+
+        cv::Mat frame;
+        cv::Mat vierge;
 };
 
 #endif
