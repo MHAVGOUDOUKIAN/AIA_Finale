@@ -5,11 +5,13 @@
 #include <opencv4/opencv2/tracking/tracking.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/imgproc.hpp>
+#include <Constant.hpp>
 
+class OpenGL_App;
 
 class OpenCV_App {
     public:
-        OpenCV_App();
+        OpenCV_App(OpenGL_App* tab);
         ~OpenCV_App();
 
         cv::Mat& update();
@@ -57,6 +59,8 @@ class OpenCV_App {
 
         cv::Mat frame;
         cv::Mat vierge;
+
+        OpenGL_App* app;
 };
 
 #endif

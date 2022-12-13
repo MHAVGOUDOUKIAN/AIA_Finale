@@ -2,7 +2,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-OpenGL_App::OpenGL_App() : opCV() {
+OpenGL_App::OpenGL_App() : opCV(this) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -35,44 +35,21 @@ OpenGL_App::OpenGL_App() : opCV() {
     glEnable(GL_DEPTH_TEST);
 
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
+    lab_created = false;
+    tabl_size = 0;
 }
 
 OpenGL_App::~OpenGL_App() {}
         
 void OpenGL_App::run() {
-    float crate_vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-    };
-
     float camera_sprite_vertices[] = {
-        -1.f, -1.f, 0.85f,  0.0f, 0.0f,
-         1.f, -1.f, 0.85f,  1.0f, 0.0f,
-         1.f,  1.f, 0.85f,  1.0f, 1.0f,
-         1.f,  1.f, 0.85f,  1.0f, 1.0f,
-        -1.f,  1.f, 0.85f,  0.0f, 1.0f,
-        -1.f, -1.f, 0.85f,  0.0f, 0.0f,
+        -1.f, -1.f, 0.86f,  0.0f, 0.0f,
+         1.f, -1.f, 0.86f,  1.0f, 0.0f,
+         1.f,  1.f, 0.86f,  1.0f, 1.0f,
+         1.f,  1.f, 0.86f,  1.0f, 1.0f,
+        -1.f,  1.f, 0.86f,  0.0f, 1.0f,
+        -1.f, -1.f, 0.86f,  0.0f, 0.0f,
     };
-
-    unsigned int VBO_crate, VAO_crate;
-    glGenVertexArrays(1, &VAO_crate);
-    glGenBuffers(1, &VBO_crate);
-
-    glBindVertexArray(VAO_crate);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_crate);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(crate_vertices), crate_vertices, GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     unsigned int VBO_cam, VAO_cam;
     glGenVertexArrays(1, &VAO_cam);
@@ -120,20 +97,57 @@ void OpenGL_App::run() {
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // render boxes
-        glBindTexture(GL_TEXTURE_2D, tex->getID());
-        glBindVertexArray(VAO_crate);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        if(lab_created) {
+            glBindTexture(GL_TEXTURE_2D, tex->getID());
+            glBindVertexArray(VAO_lab);
+            glDrawArrays(GL_TRIANGLES, 0, tabl_size/5);
+        }
+        
 
         glfwSwapBuffers(m_window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO_crate);
-    glDeleteBuffers(1, &VBO_crate);
+    glDeleteVertexArrays(1, &VAO_lab);
+    glDeleteBuffers(1, &VBO_lab);
     glDeleteVertexArrays(1, &VAO_cam);
     glDeleteBuffers(1, &VBO_cam);
 
     glfwTerminate();
+}
+
+void OpenGL_App::set_tabl_value(int i, double value) {
+    lab_vertices[i] = value;
+}
+
+double OpenGL_App::get_tabl_value(int i) {
+    return lab_vertices[i];
+}
+
+void OpenGL_App::build_laby() {
+    // double test[tabl_size];
+    // for (int cpt=0;cpt<tabl_size;cpt++){
+    //     test[cpt]=lab_vertices[cpt];
+    // }
+
+
+
+    glGenVertexArrays(1, &VAO_lab);
+    glGenBuffers(1, &VBO_lab);
+
+    glBindVertexArray(VAO_lab);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_lab);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lab_vertices), lab_vertices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // color attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);   
+
+    lab_created=true;
 }
 
 void OpenGL_App::processInput() { 

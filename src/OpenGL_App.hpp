@@ -13,9 +13,8 @@
 #include <OpenGL_Texture.hpp>
 #include <OpenGL_Camera.hpp>
 #include <OpenCV_Main.hpp>
+#include <Constant.hpp>
 
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
 
 class OpenGL_App {
     public:
@@ -23,11 +22,21 @@ class OpenGL_App {
         ~OpenGL_App();
         void run();
 
+        void build_laby();
+        void set_tabl_value(int i, double value);
+        double get_tabl_value(int i);
+
+        int tabl_size;
+
     private:
         void processInput();
         GLFWwindow* m_window;
         OpenGL_Shader* m_shaderProgram;
         OpenCV_App opCV;
+
+        unsigned int VBO_lab, VAO_lab;
+        float lab_vertices[2000000];
+        bool lab_created;
 };
 
 #endif

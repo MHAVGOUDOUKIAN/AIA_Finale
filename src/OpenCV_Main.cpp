@@ -1,14 +1,17 @@
 #include <OpenCV_Main.hpp>
+#include <OpenGL_App.hpp>
 
 using namespace cv;
 using namespace std;
 
-OpenCV_App::OpenCV_App() {
+OpenCV_App::OpenCV_App(OpenGL_App* tab) {
     capture = cv::VideoCapture(0);
     tracker0 = cv::TrackerKCF::create();
     tracker1 = cv::TrackerKCF::create();
     tracker2 = cv::TrackerKCF::create();
     tracker3 = cv::TrackerKCF::create();
+
+    app=tab;
 
     index_carre_choosed=0;
     end_init_phase = false;
@@ -35,6 +38,7 @@ cv::Mat& OpenCV_App::update() {
                 tracker2->init(vierge, Rect(ROI2Coord, ROI2Size));
                 tracker3->init(vierge, Rect(ROI3Coord, ROI3Size));
                 app_status = Status::RUNNING;
+                std::cout << "Mode: RUNNING" << std::endl;
             }
         }    
         return frame;        
@@ -56,12 +60,12 @@ cv::Mat& OpenCV_App::update() {
                 line(vierge, cv::Point2i(rect3.x+rect3.width/2, rect3.y+rect3.height/2), cv::Point2i(rect3.x+rect3.width/2, rect3.y+rect3.height/2), cv::Scalar(255,0,255),5);
             }
             else{
-                std::cout << "Lost tracking" << std::endl;
+                //std::cout << "Lost tracking" << std::endl;
             }
         }
         catch (exception& e)
         {
-            std::cout << "Lost tracking" << std::endl;
+            // std::cout << "Lost tracking" << std::endl;
         }
 
         return frame;
@@ -205,6 +209,115 @@ bool OpenCV_App::findROI(cv::Mat& frame, cv::Mat& vierge, std::vector<cv::Point>
 
     int width = std::max(carre[1].x-carre[0].x, carre[2].y-carre[1].y);
 
+    cv::Mat noirblanc;
+        cvtColor(vierge, noirblanc, cv::COLOR_BGR2GRAY);
+        int x_max = max(carre[1].x,carre[2].x);
+        int y_max = max(carre[2].y,carre[3].y);
+        int x_min = min(carre[0].x,carre[3].x);
+        int y_min = min(carre[0].y,carre[1].y);
+        cv::Mat mur(y_max - y_min, x_max-x_min, CV_8U);
+
+
+    try {
+        int compteur = 0;
+
+        for (int y=0; y < y_max-y_min; y++){
+            for (int x=0; x < x_max - x_min; x++){
+                if (static_cast<int>(noirblanc.at<uchar>(cv::Point(x+x_min,y + y_min))) > 127){
+                    mur.at<uchar>(cv::Point(x,y)) = static_cast<uchar>(255);
+                }
+                else{
+                    mur.at<uchar>(cv::Point(x,y)) = static_cast<uchar>(0);
+                    if (x < x_max - x_min - 1 && y < y_max-y_min - 1){
+                        if (static_cast<int>(noirblanc.at<uchar>(cv::Point(x+x_min+1,y + y_min+1))) < 127){
+                            if (static_cast<int>(noirblanc.at<uchar>(cv::Point(x+x_min+1,y + y_min))) < 127){
+                                app->set_tabl_value(compteur,(double)(x+x_min)/(SCR_WIDTH/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,(double)(y + y_min)/(SCR_HEIGHT/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0.85);
+                                compteur++;
+                                app->set_tabl_value(compteur,0);
+                                compteur++;
+                                app->set_tabl_value(compteur,0);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(x+x_min+1))/(SCR_WIDTH/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(y + y_min))/(SCR_HEIGHT/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0.85);
+                                compteur++;
+                                app->set_tabl_value(compteur,1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(x+x_min+1))/(SCR_WIDTH/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(y + y_min+1))/(SCR_HEIGHT/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0.85);
+                                compteur++;
+                                app->set_tabl_value(compteur,1);
+                                compteur++;
+                                app->set_tabl_value(compteur,1);
+                                compteur++;
+                            }
+                            if (static_cast<int>(noirblanc.at<uchar>(cv::Point(x+x_min,y + y_min+1))) < 127){
+                                app->set_tabl_value(compteur,((double)(x+x_min))/(SCR_WIDTH/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(y + y_min))/(SCR_HEIGHT/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0.85);
+                                compteur++;
+                                app->set_tabl_value(compteur,0);
+                                compteur++;
+                                app->set_tabl_value(compteur, 0);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(x+x_min))/(SCR_WIDTH/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(y + y_min+1))/(SCR_HEIGHT/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0.85);
+                                compteur++;
+                                app->set_tabl_value(compteur,0);
+                                compteur++;
+                                app->set_tabl_value(compteur,1);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(x+x_min+1))/(SCR_WIDTH/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,((double)(y + y_min+1))/(SCR_HEIGHT/2)-1);
+                                compteur++;
+                                app->set_tabl_value(compteur,0.85);
+                                compteur++;
+                                app->set_tabl_value(compteur,1);
+                                compteur++;
+                                app->set_tabl_value(compteur,1);
+                                compteur++;
+                            }
+                        }
+                    }
+                }
+            }
+            std::cout << compteur << std::endl;
+        }
+        app->build_laby();
+        app->tabl_size = compteur;
+
+        for(int i=0; i < compteur/5; i+=5) {
+            std::cout << app->get_tabl_value(i) << "," 
+            << app->get_tabl_value(i+1) << ","
+            << app->get_tabl_value(i+2) << ","
+            << app->get_tabl_value(i+3) << ","
+            << app->get_tabl_value(i+4) << ";"<< std::endl;
+        }
+
+        std::cout << compteur << std::endl;
+
+    } catch (exception& e) {
+        std::cout << "Can't build labyrinthe" << std::endl;
+        return false;
+    }
+
     try {
             ROI0Coord = carre[0]-cv::Point(width*0.2/4, width*0.2/4);
             ROI1Coord = carre[1]-cv::Point(width*0.2*3/4, width*0.2/4);
@@ -225,8 +338,6 @@ bool OpenCV_App::findROI(cv::Mat& frame, cv::Mat& vierge, std::vector<cv::Point>
         std::cout << "Can't build ROI" << std::endl;
         return false;
     }
-
-    std::cout << "salut" << std::endl;
 
     return true;
 }

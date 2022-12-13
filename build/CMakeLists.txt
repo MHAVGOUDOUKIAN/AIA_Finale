@@ -28,6 +28,7 @@ set( HEADERS
     ${SOURCE_DIR}/stb_image.h
     ${SOURCE_DIR}/glad.h
     ${SOURCE_DIR}/OpenCV_Main.hpp
+    ${SOURCE_DIR}/Constant.hpp
 )
 
 find_package( OpenCV REQUIRED )
