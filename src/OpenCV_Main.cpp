@@ -19,7 +19,7 @@ OpenCV_App::OpenCV_App(OpenGL_App* tab) {
 
 // Update va renvoyer le cv::Mat avec toute les informations en utilisant
 // 'current-frame'
-cv::Mat& OpenCV_App::update() {
+cv::Mat& OpenCV_App::update(cv::Mat* glViewMatrix) {
     liste_carre.clear();
     frame = getCap();
     vierge = frame;
@@ -58,6 +58,44 @@ cv::Mat& OpenCV_App::update() {
                 line(vierge, cv::Point2i(rect1.x+rect1.width/2, rect1.y+rect1.height/2), cv::Point2i(rect1.x+rect1.width/2, rect1.y+rect1.height/2), cv::Scalar(255,0,255),5);
                 line(vierge, cv::Point2i(rect2.x+rect2.width/2, rect2.y+rect2.height/2), cv::Point2i(rect2.x+rect2.width/2, rect2.y+rect2.height/2), cv::Scalar(255,0,255),5);
                 line(vierge, cv::Point2i(rect3.x+rect3.width/2, rect3.y+rect3.height/2), cv::Point2i(rect3.x+rect3.width/2, rect3.y+rect3.height/2), cv::Scalar(255,0,255),5);
+            
+                cv::Mat rotation_vector;
+                cv::Mat translation_vector;
+
+                Point2d center = cv::Point2d(vierge.cols/2,vierge.rows/2);
+                cv::Mat camera_matrix = (cv::Mat_<double>(3,3) << vierge.cols, 0, center.x, 0, vierge.rows, center.y, 0, 0, 1);
+
+                std::vector<cv::Point3d> model_points;
+                model_points.push_back(cv::Point3d(-1,-1,0));
+                model_points.push_back(cv::Point3d(-1,1,0));
+                model_points.push_back(cv::Point3d(1,1,0));
+                model_points.push_back(cv::Point3d(1,-1,0));
+
+                std::vector<cv::Point2d> image_points;
+                image_points.push_back(cv::Point2d(rect0.x+rect0.width/2, rect0.y+rect0.height/2));
+                image_points.push_back(cv::Point2d(rect1.x+rect1.width/2, rect1.y+rect1.height/2));
+                image_points.push_back(cv::Point2d(rect2.x+rect2.width/2, rect2.y+rect2.height/2));
+                image_points.push_back(cv::Point2d(rect3.x+rect3.width/2, rect3.y+rect3.height/2));
+
+                // Find matrix of homographie 
+                cv::Mat dist_coeffs = cv::Mat::zeros(4,1,cv::DataType<double>::type);
+                cv::solvePnP(model_points, image_points, camera_matrix, dist_coeffs, rotation_vector, translation_vector);
+            
+                std::cout << rotation_vector << std::endl;
+                std::cout << translation_vector << std::endl;
+                cv::Mat rotation_matrix;
+                cv::Rodrigues(rotation_vector, rotation_matrix);
+
+                cv::Mat viewMatrix = cv::Mat::eye(4, 4, CV_64FC1);
+                rotation_matrix.copyTo(viewMatrix(cv::Rect(0, 0, 3, 3)));
+                translation_vector.copyTo(viewMatrix(cv::Rect(3,0,1,3)));
+
+                cv::Mat cvToGl = cv::Mat::eye(4, 4, CV_64F);
+                cvToGl.at<double>(1, 1) = -1.0f; // Invert the y axis
+                viewMatrix = cvToGl * viewMatrix;
+                // Transposée
+
+                cv::transpose(viewMatrix , *glViewMatrix);
             }
             else{
                 //std::cout << "Lost tracking" << std::endl;

@@ -6,6 +6,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/imgproc.hpp>
 #include <Constant.hpp>
+#include <vector>
 
 class OpenGL_App;
 
@@ -14,14 +15,14 @@ class OpenCV_App {
         OpenCV_App(OpenGL_App* tab);
         ~OpenCV_App();
 
-        cv::Mat& update();
+        cv::Mat& update(cv::Mat* glViewMatrix);
 
         int angle( cv::Point a, cv::Point b, cv::Point c );
         void find_squares(cv::Mat& image, std::vector<std::vector<cv::Point> >* squares);
         cv::Mat debugSquares( std::vector<std::vector<cv::Point> > squares, cv::Mat image, int& carre_choosed);
         bool findROI(cv::Mat& frame, cv::Mat& vierge, std::vector<cv::Point> carre);
         void trackingSymbols(cv::Mat image, cv::Ptr<cv::Tracker>& tracker);
-        
+
         bool is_Capture_Open();
         cv::Mat& getCap(void);
 

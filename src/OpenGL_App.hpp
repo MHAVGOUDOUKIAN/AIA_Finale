@@ -27,11 +27,13 @@ class OpenGL_App {
         double get_tabl_value(int i);
 
         int tabl_size;
+        cv::Mat glViewMatrix;
 
     private:
         void processInput();
         GLFWwindow* m_window;
-        OpenGL_Shader* m_shaderProgram;
+        OpenGL_Shader* m_SP_Cam;
+        OpenGL_Shader* m_SP_Laby;
         OpenCV_App opCV;
 
         unsigned int VBO_lab, VAO_lab;

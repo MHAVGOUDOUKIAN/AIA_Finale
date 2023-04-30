@@ -24,7 +24,8 @@ OpenGL_App::OpenGL_App() : opCV(this) {
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) { std::cout << "Failed to initialize GLAD" << std::endl; }
 
-    m_shaderProgram = new OpenGL_Shader("src/shader.vert", "src/shader.frag");
+    m_SP_Cam = new OpenGL_Shader("src/shader_Cam.vert", "src/shader.frag");
+    m_SP_Laby = new OpenGL_Shader("src/shader_Laby.vert", "src/shader.frag");
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -80,12 +81,12 @@ void OpenGL_App::run() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        m_shaderProgram->use();
+        m_SP_Cam->use();
 
         // la fonction opCV.update() permet d'obtenir deux choses:
         // 1 - Visualiser les carrés détectés par la camera lors de la phase d'init.
         // 2 - Les points de tracking lors de la phase de jeu
-        cv::Mat captureWebCam = opCV.update();
+        cv::Mat captureWebCam = opCV.update(&glViewMatrix);
         cv::cvtColor(captureWebCam, captureWebCam, cv::COLOR_RGB2BGR);
         flip(captureWebCam, captureWebCam, -1);
         glBindTexture(GL_TEXTURE_2D, textureCam);
@@ -98,6 +99,34 @@ void OpenGL_App::run() {
 
         // render boxes
         if(lab_created) {
+            m_SP_Laby->use();
+            glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+            transform = glm::rotate(transform, (float)M_PI, glm::vec3(0.0f, 1.0f, 0.0f));
+            transform = glm::rotate(transform, (float)M_PI, glm::vec3(1.0f, 0.0f, 0.0f));
+
+            glm::mat4 viewMat;
+            std::cout <<"S----------------" << std::endl;
+            for(int i=0; i < glViewMatrix.cols; i++) {
+                for(int j=0; j < glViewMatrix.rows; j++) {
+                    viewMat[i][j] = glViewMatrix.at<float>(i,j);
+                    
+                    std::cout << viewMat[i][j] << " ";
+                }
+                    std::cout << std::endl;
+            }
+            viewMat[3][0] = 0;
+            viewMat[3][1] = 0;
+            viewMat[3][2] = 0;
+            viewMat[3][3] = 1;
+            
+
+            std::cout <<"-----------------" << std::endl;
+            unsigned int transformLoc = glGetUniformLocation(m_SP_Laby->getID(), "transform");
+            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
+            unsigned int PerspectiveLoc = glGetUniformLocation(m_SP_Laby->getID(), "perspective");
+            glUniformMatrix4fv(PerspectiveLoc, 1, GL_FALSE, glm::value_ptr(viewMat));
+
             glBindTexture(GL_TEXTURE_2D, tex->getID());
             glBindVertexArray(VAO_lab);
             glDrawArrays(GL_TRIANGLES, 0, tabl_size/5);
@@ -125,13 +154,6 @@ double OpenGL_App::get_tabl_value(int i) {
 }
 
 void OpenGL_App::build_laby() {
-    // double test[tabl_size];
-    // for (int cpt=0;cpt<tabl_size;cpt++){
-    //     test[cpt]=lab_vertices[cpt];
-    // }
-
-
-
     glGenVertexArrays(1, &VAO_lab);
     glGenBuffers(1, &VBO_lab);
 
